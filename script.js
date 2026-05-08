@@ -25,15 +25,10 @@ window.addEventListener('message', function (event) {
   var data = event.data;
   var redirectUrl = 'https://fap01-calendly-semi.fullsalessystem.com/';
 
-  // GHL / LeadConnector booking widget events
-  if (
-    data.type === 'appointmentBooked' ||
-    data.event === 'appointmentBooked' ||
-    data.type === 'bookingConfirmation' ||
-    data.event === 'bookingConfirmation' ||
-    data.action === 'appointmentBooked' ||
-    (typeof data === 'string' && data.indexOf('appointmentBooked') !== -1)
-  ) {
+  // Only the canonical GHL "appointment booked" event — narrow match
+  // avoids redirecting on intermediate events (e.g. bookingConfirmation
+  // step display) which aborts the in-flight POST and breaks the booking.
+  if (data.type === 'appointmentBooked' || data.event === 'appointmentBooked') {
     window.location.href = redirectUrl;
   }
 });
