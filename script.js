@@ -12,18 +12,16 @@ function pbDl(evt, params) {
 var PB_REDIRECT_URL = 'https://playbook-obrigado-final.fullsalessystem.com/';
 var pbBookedFired = false;
 
-window.addEventListener('message', function (e) {
-  if (!e.data) return;
-  var t = e.data;
-  var isBooked =
-    t.type === 'appointmentBooked' || t.event === 'appointmentBooked' ||
-    t.type === 'bookingConfirmation' || t.event === 'bookingConfirmation' ||
-    t.action === 'appointmentBooked' ||
-    (typeof t === 'string' && t.indexOf('appointmentBooked') !== -1);
-  if (!isBooked || pbBookedFired) return;
+function pbQuery(name) {
+  try { return new URLSearchParams(window.location.search).get(name) || ''; } catch (e) { return ''; }
+}
+
+/* Agendou (calendario do GHL por postMessage ou seletor do CRM): conversao + obrigado-final. */
+function pbAgendou(origem) {
+  if (pbBookedFired) return;
   pbBookedFired = true;
 
-  pbDl('pb_calendly_booked', { msg_type: t.type || t.event || t.action || 'string' });
+  pbDl('pb_calendly_booked', { msg_type: origem });
 
   /* Conversao Meta: agendamento e o evento mais valioso do funil (pixel vem via GTM) */
   if (typeof fbq === 'function') fbq('track', 'Schedule');
@@ -32,6 +30,17 @@ window.addEventListener('message', function (e) {
   setTimeout(function () {
     window.location.href = PB_REDIRECT_URL;
   }, 300);
+}
+
+window.addEventListener('message', function (e) {
+  if (!e.data) return;
+  var t = e.data;
+  var isBooked =
+    t.type === 'appointmentBooked' || t.event === 'appointmentBooked' ||
+    t.type === 'bookingConfirmation' || t.event === 'bookingConfirmation' ||
+    t.action === 'appointmentBooked' ||
+    (typeof t === 'string' && t.indexOf('appointmentBooked') !== -1);
+  if (isBooked) pbAgendou(t.type || t.event || t.action || 'string');
 });
 
 /* ── Floating CTA: aparece após a seção #diagnostico ── */
